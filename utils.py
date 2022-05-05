@@ -1,6 +1,9 @@
 import pandas as pd
 import matplotlib.pyplot as plt
-from sqlalchemy import column
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score
+from sklearn.preprocessing import MinMaxScaler
 
 def clean_data(series):
     for val in series:
@@ -60,6 +63,38 @@ def categorize_high_low(series):
             return_list.append(0)
     return return_list
 
+def hypothesis_test(series1, series2):
+    from scipy import stats
+    # use t-test dependent 
+    t, pval = stats.ttest_rel(series1, series2)
+    pval /= 2 # divide by two because 1 rejection region
+    print("t:", t, "pval:", pval)
+    alpha = 0.01
+    if pval < alpha:
+        print("reject H0")
+    else:
+        print("do not reject H0")
 
 
+def prep_model(df, column):
+    df = df.drop("Date", axis=1)
+    df = df.drop("Day of Week", axis=1)
+    X = df.drop(column, axis=1)
+    y = df[column]
+    return X, y
 
+def knn_model(df, column):
+    X, y = prep_model(df, column)
+    X_train, X_test, y_train, y_test =\
+        train_test_split(X, y, test_size=0.25,
+        random_state=0)
+
+    scaler = MinMaxScaler()
+    scaler.fit(X_train)
+    #X_train_normalized = scaler.transform(X_train)
+    knn_clf = KNeighborsClassifier(n_neighbors=25)
+    knn_clf.fit(X_train, y_train)
+    y_predicted = knn_clf.predict(X_test)
+    accuracy = knn_clf.score(X_test, y_test)
+    accuracy = accuracy_score(y_test, y_predicted)
+    print("accuracy:", accuracy)
