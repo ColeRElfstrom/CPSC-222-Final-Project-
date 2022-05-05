@@ -4,6 +4,8 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
 from sklearn.preprocessing import MinMaxScaler
+from sklearn.tree import DecisionTreeClassifier
+from sklearn import tree
 
 def clean_data(series):
     for val in series:
@@ -83,11 +85,11 @@ def prep_model(df, column):
     y = df[column]
     return X, y
 
-def knn_model(df, column):
+def create_model(df, column):
     X, y = prep_model(df, column)
     X_train, X_test, y_train, y_test =\
         train_test_split(X, y, test_size=0.25,
-        random_state=0)
+        random_state=0, stratify=y)
 
     scaler = MinMaxScaler()
     scaler.fit(X_train)
@@ -97,4 +99,11 @@ def knn_model(df, column):
     y_predicted = knn_clf.predict(X_test)
     accuracy = knn_clf.score(X_test, y_test)
     accuracy = accuracy_score(y_test, y_predicted)
-    print("accuracy:", accuracy)
+    print(column, " KNN Accuracy:", accuracy)
+
+    tree_clf = DecisionTreeClassifier(random_state=0)
+    tree_clf.fit(X_train, y_train)
+    y_predicted = tree_clf.predict(X_test)
+    accuracy = accuracy_score(y_test, y_predicted)
+    print(column, " Decision Tree Accuracy:", accuracy)
+
